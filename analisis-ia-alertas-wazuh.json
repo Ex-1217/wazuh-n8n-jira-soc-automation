@@ -1,0 +1,166 @@
+{
+  "name": "\"Análisis IA - Alertas Wazuh\"",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "eb2a2a53-b103-4837-8946-1509983b1e4d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 5,
+        "options": {
+          "jql": "project = SCRUM"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "816cadaa-cbc4-4e64-85f6-cdb4f384c3fe",
+      "name": "Get many issues",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "EZYWsYI9KcpxJBVu",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza esta alerta de seguridad generada por Wazuh y determina si es ruido rutinario o si se debe escalar a nivel 2. Da tu veredicto (CERRAR o ESCALAR) y una justificación breve en 2-3 líneas.\n\nTicket: {{$json.key}}\nResumen: {{$json.fields.summary}}\nDescripción: {{$json.fields.description}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9763510e-1a99-4b0a-a444-dc5ed9cedd7d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        288,
+        208
+      ],
+      "id": "ccc15f0a-b7b8-4db9-b705-fddeb46b2f5b",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "qmybmjDbART8FTVF",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issueComment",
+        "issueKey": "={{$('Get many issues').item.json.key}}",
+        "comment": "={{$json.output}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        768,
+        0
+      ],
+      "id": "524a0e53-0472-435c-aa25-dd4e1bfbe480",
+      "name": "Add a comment",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "EZYWsYI9KcpxJBVu",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many issues",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many issues": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add a comment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "e2a7637c-a4ca-4456-8458-37568300449e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2d4d385de8835b83eb23fb10f982b22846caa0faa265d1a5b22ec62cfece95ba"
+  },
+  "nodeGroups": [],
+  "id": "eMBIzKAbCf8IOdzy",
+  "tags": []
+}

@@ -1,0 +1,130 @@
+{
+  "name": "Wazuh → Jira.",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "REDACTED-WEBHOOK-ID",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0ef1bc72-1f00-4d9a-882d-c1c37889b858",
+      "name": "Webhook",
+      "webhookId": "REDACTED-WEBHOOK-ID"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10000",
+          "mode": "list",
+          "cachedResultName": "Mi espacio de scrum"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10003",
+          "mode": "list",
+          "cachedResultName": "Historia"
+        },
+        "summary": "={{$json.body.title}}",
+        "additionalFields": {
+          "description": "=Wazuh Notification. {{$json.body.timestamp}}\nReceived From: ({{$json.body.all_fields.agent.name}}) {{$json.body.all_fields.agent.ip}} -> EventChannelRule: {{$json.body.rule_id}} fired (level {{$json.body.all_fields.rule.level}}) -> \"{{$json.body.title}}\"\n\nPortion of the log(s):\n{{JSON.stringify($json.body.all_fields).slice(0, 500)}}...\n\n--END OF NOTIFICATION--"
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "9f44b43d-723e-425f-b98f-11edcbdb9713",
+      "name": "Create an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "EZYWsYI9KcpxJBVu",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6438e5b0-6df7-4962-98e1-1a0db9c90e44",
+              "leftValue": "=\n{{$json.body.all_fields.rule.level}}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f0e36968-edfc-438f-a48a-3ec632b8ef6c",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "5c761daf-32a2-4a8b-88f2-5df38ea05f03",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2d4d385de8835b83eb23fb10f982b22846caa0faa265d1a5b22ec62cfece95ba"
+  },
+  "nodeGroups": [],
+  "id": "yGcZlCbMXjGTW0o6",
+  "tags": []
+}
