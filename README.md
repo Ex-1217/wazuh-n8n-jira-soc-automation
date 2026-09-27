@@ -9,7 +9,7 @@ Flujos de n8n exportados en [`flows/`](./flows).
 
 ## Stack
 
-Wazuh · n8n · Jira · LLM vía Groq · VirtualBox (Kali Linux, Windows)
+Wazuh · n8n · Jira · LLM vía Groq · VirtualBox (Kali Linux, Windows, Ubuntu)
 
 ---
 
