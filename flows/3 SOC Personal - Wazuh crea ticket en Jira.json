@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "b2ae22ff-ce18-41fd-8c82-3ad2e35b9e15",
+        "path": "TU-RUTA-DEL-WEBHOOK",
         "options": {}
       },
       "type": "n8n-nodes-base.webhook",
@@ -15,7 +15,7 @@
       ],
       "id": "0ef1bc72-1f00-4d9a-882d-c1c37889b858",
       "name": "Webhook",
-      "webhookId": "b2ae22ff-ce18-41fd-8c82-3ad2e35b9e15"
+      "webhookId": "TU-RUTA-DEL-WEBHOOK"
     },
     {
       "parameters": {
@@ -33,7 +33,7 @@
         },
         "summary": "={{$json.body.title}}",
         "additionalFields": {
-          "description": "=Wazuh Notification. {{$json.body.timestamp}}\nReceived From: ({{$json.body.all_fields.agent.name}}) {{$json.body.all_fields.agent.ip}} -> EventChannelRule: {{$json.body.rule_id}} fired (level {{$json.body.all_fields.rule.level}}) -> \"{{$json.body.title}}\"\n\nPortion of the log(s):\n{{JSON.stringify($json.body.all_fields).slice(0, 500)}}...\n\n--END OF NOTIFICATION--"
+          "description": "=ALERTA DE WAZUH\nQué ha pasado: {{ $json.body.all_fields.rule.description }}\nGravedad: {{ $json.body.all_fields.rule.level >= 15 ? 'Crítica' : $json.body.all_fields.rule.level >= 12 ? 'Alta' : $json.body.all_fields.rule.level >= 7 ? 'Media' : 'Baja' }} (nivel {{ $json.body.all_fields.rule.level }} de 15)\nEquipo: {{ $json.body.all_fields.agent.name }} ({{ $json.body.all_fields.agent.ip }})\nRegla: {{ $json.body.all_fields.rule.id }}\nFecha: {{ $json.body.timestamp }}\n\nLog:\n{{ JSON.stringify($json.body.all_fields).slice(0, 500) }}..."
         }
       },
       "type": "n8n-nodes-base.jira",
@@ -46,7 +46,6 @@
       "name": "Create an issue",
       "credentials": {
         "jiraSoftwareCloudApi": {
-          "id": "EZYWsYI9KcpxJBVu",
           "name": "Jira SW Cloud account"
         }
       }
@@ -64,7 +63,7 @@
             {
               "id": "6438e5b0-6df7-4962-98e1-1a0db9c90e44",
               "leftValue": "=\n{{$json.body.all_fields.rule.level}}",
-              "rightValue": 3,
+              "rightValue": 5,
               "operator": {
                 "type": "number",
                 "operation": "gte"
@@ -84,6 +83,61 @@
       ],
       "id": "f0e36968-edfc-438f-a48a-3ec632b8ef6c",
       "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres analista SOC de nivel 1. Explica esta alerta de Wazuh a un analista que está aprendiendo y recomienda qué hacer.\n\nResponde en español, en texto plano, sin Markdown ni asteriscos, con estas 4 partes y estos títulos exactos:\n\nQUÉ HA PASADO: 1 o 2 frases sencillas.\nDATOS CLAVE: equipo, usuario afectado, origen (IP o local), tipo de inicio de sesión si aparece, regla y nivel, técnica MITRE.\nCAUSA PROBABLE: lo más probable (por ejemplo, el usuario se equivocó de contraseña, una prueba o un intento de ataque) y por qué, citando campos de la alerta.\nRECOMENDACIÓN: CERRAR (falso positivo o prueba) o ESCALAR (posible ataque real), y qué comprobar antes de decidir.\n\nSi un dato no aparece en la alerta, escribe \"no aparece en la alerta\". No inventes datos.\n\nTicket: {{ $json.key }}\nAlerta completa de Wazuh:\n{{ JSON.stringify({...$('Webhook').item.json.body.all_fields, previous_output: \"\"})}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        672,
+        0
+      ],
+      "name": "Explicar alerta (IA)",
+      "id": "7195f5bb-eabb-4fce-b608-779707f300f6"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        592,
+        176
+      ],
+      "name": "Groq Chat Model",
+      "id": "43a461f2-7775-4b24-9cf1-f627706def71",
+      "credentials": {
+        "groqApi": {
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issueComment",
+        "issueKey": "={{ $('Create an issue').item.json.key }}",
+        "comment": "={{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        0
+      ],
+      "name": "Comentar en Jira",
+      "id": "502f3916-12a4-40c6-8f67-d471ae2663a4",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "name": "Jira SW Cloud account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -109,9 +163,41 @@
           }
         ]
       ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Explicar alerta (IA)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Explicar alerta (IA)": {
+      "main": [
+        [
+          {
+            "node": "Comentar en Jira",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue": {
+      "main": [
+        [
+          {
+            "node": "Explicar alerta (IA)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
@@ -119,12 +205,6 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "5c761daf-32a2-4a8b-88f2-5df38ea05f03",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "2d4d385de8835b83eb23fb10f982b22846caa0faa265d1a5b22ec62cfece95ba"
-  },
   "nodeGroups": [],
-  "id": "yGcZlCbMXjGTW0o6",
   "tags": []
 }
