@@ -1,4 +1,4 @@
-# Detección y respuesta automatizada con Wazuh + n8n + Jira
+# Detección Y triaje automatizado con Wazuh + n8n + Jira
 
 Proyecto personal de ciberseguridad: un pequeño SOC en máquinas virtuales que detecta ataques con un SIEM, abre un ticket en Jira y usa una IA para explicar la alerta y recomendar si cerrarla o escalarla. **La IA solo recomienda: la decisión es del analista.**
 
@@ -14,4 +14,4 @@ Wazuh 4.14 · Sysmon · n8n (Docker) · Jira Cloud · Groq (openai/gpt-oss-120b)
 
 ---
 
-*Proyecto personal con fines de aprendizaje y práctica en detección, automatización y respuesta a incidentes.*
+*Proyecto personal con fines de aprendizaje y práctica en detección, automatización y triaje de alertas.*
